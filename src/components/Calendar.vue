@@ -27,7 +27,7 @@
                 <div class="week-day">Вс</div>
             </div>
             <div class="days">
-                <div class="day" v-for="(day, index) in month.days" :key="index" v-bind:class="{available: day.a}">{{day.n}}</div>
+                <div class="day" v-for="(day, index) in month.days" :key="index" v-bind:class="{available: day.a, holiday: day.h, today: day.t}">{{day.n}}</div>
             </div>
         </div>
     </div>
@@ -49,44 +49,76 @@ export default {
                 thisMonth = [];
             today.setMonth(today.getMonth() + selected)
             if(new Date(today.getFullYear(), today.getMonth(), 1).getDay() > 0) {
-                for(let i = 0, d = new Date(today.getFullYear(), today.getMonth(), 0).getDate(); i < new Date(today.getFullYear(), today.getMonth(), 1).getDay()-1; i++, d--) {
+                for(let i = 0, h = false, dw = 0, d = new Date(today.getFullYear(), today.getMonth(), 0).getDate(); i < new Date(today.getFullYear(), today.getMonth(), 1).getDay()-1; i++, d--) {
+                    dw = new Date(today.getFullYear(), today.getMonth(), i).getDay()
+h = false
+                    if(dw === 0 || dw === 6) {
+                        h = true
+                    }
                     thisMonth.unshift({
                         n: d,
-                        a: false
+                        a: false,
+                        h: h,
+                        t: false
                     })
                 }
             } else if (new Date(today.getFullYear(), today.getMonth(), 1).getDay() === 0) {
-                for(let i = 0, d = new Date(today.getFullYear(), today.getMonth(), 0).getDate(); i < 6; i++, d--) {
+                for(let i = 0, h = false, dw = 0, d = new Date(today.getFullYear(), today.getMonth(), 0).getDate(); i < 6; i++, d--) {
+                    dw = new Date(today.getFullYear(), today.getMonth(), i).getDay()
+                    h = false
+                    if(dw === 0 || dw === 6) {
+                        h = true
+                    }
                     thisMonth.unshift({
                         n: d,
-                        a: false
+                        a: false,
+                        h: h,
+                        t: false
                     })
                 }
             }
-            for(let i = 1, a = true, dw = 0, prevday = true; i <= new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate(); i++) {
+            for(let i = 1, a = true, dw = 0, h = false, t = false, prevday = true; i <= new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate(); i++) {
                 dw = new Date(today.getFullYear(), today.getMonth(), i).getDay()
                 if(!this.selected) {
                     if(i > today.getDate()) {
                         prevday = false
                     }
+                    if(i === today.getDate()) {
+                        t = true
+                    } else {
+                        t = false
+                    }
                 } else {
                     prevday = false
                 }
-                if(dw === 0 || dw === 6 || prevday) {
+                h = false
+                if(dw === 0 || dw === 6) {
+                    a = false
+                    h = true
+                } else if(prevday) {
                     a = false
                 } else {
                     a = true
                 }
                 thisMonth.push({
                     n: i,
-                    a: a
+                    a: a,
+                    h: h,
+                    t: t
                 })
             }
             let thisMonthLength = 42 - thisMonth.length;
-            for(let i = 1; i <= thisMonthLength; i++) {
+            for(let i = 1, h = false, dw = 0; i <= thisMonthLength; i++) {
+                dw = new Date(today.getFullYear(), today.getMonth()+1, i).getDay()
+                h = false
+                if(dw === 0 || dw === 6) {
+                    h = true
+                }
                 thisMonth.push({
                     n: i,
-                    a: false
+                    a: false,
+                    h: h,
+                    t: false
                 })
             }
             return {
@@ -98,6 +130,7 @@ export default {
         changeSelected: function(selected) {
             this.selected = selected;
             this.month = this.fillMonth(this.selected)
+            console.warn(this.month)
         }
     },
     created() {
@@ -201,7 +234,7 @@ export default {
         padding: 4px;
     }
     .day {
-        color: #4D4D4D;
+        color: rgba(51, 51, 51, 0.75);
         font-family: Arial;
         font-style: normal;
         font-weight: normal;
@@ -213,16 +246,24 @@ export default {
         text-align: center;
         text-transform: capitalize;
         font-feature-settings: 'tnum' on, 'lnum' on;
-        background: #FAFAFA;
+        background: #F0F0F0;
         cursor: pointer;
     }
     .day:is(.available):hover {
-        color: #666666;
-        background: #E6E6E6;
+        background: #CCCCCC;
+        position: relative;
     }
     .day:not(.available) {
-        color: #666666;
-        background: #E5E5E5;
+        color: rgba(51, 51, 51, 0.35);
+        background: #FFFFFF;
         cursor: initial;
+    }
+    .day:is(.today) {
+        border: 1px solid rgba(51, 51, 51, 0.2);
+        box-sizing: border-box;
+    }
+    .day:is(.holiday) {
+        background: #D9D9D9;
+        color: rgba(51, 51, 51, 0.45);
     }
 </style>
